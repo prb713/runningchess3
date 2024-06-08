@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Chess</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+    canvas {
+        display: block;
+        background-color: #B58863;
+        margin: auto;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="200"></canvas>
+
+<script>
+    let canvas = document.getElementById("gameCanvas");
+    let ctx = canvas.getContext("2d");
+
+    let dinoImg = new Image();
+    dinoImg.src = "dino.png";
+
+    let obstacleImgs = [];
+    for (let i = 1; i <= 5; i++) {
+        let img = new Image();
+        img.src = "obstacle" + i + ".png";
+        obstacleImgs.push(img);
+    }
+
+    let dino = {
+        x: 50,
+        y: canvas.height - 50,
+        width: 50,
+        height: 50,
+        isJumping: false,
+        jumpHeight: 100,
+        jumpCount: 0,
+        draw: function () {
+            ctx.drawImage(dinoImg, this.x, this.y, this.width, this.height);
+        },
+        jump: function () {
+            if (!this.isJumping) {
+                this.isJumping = true;
+                this.jumpCount = 0;
+            }
+        }
+    };
+
+    let obstacles = [];
+    let score = 0;
+
+    function spawnObstacle() {
+        let obstacle = {
+            x: canvas.width,
+            y: canvas.height - 50,
+            width: 50,
+            height: 50,
+            img: obstacleImgs[Math.floor(Math.random() * obstacleImgs.length)],
+            draw: function () {
+                ctx.drawImage(this.img, this.x, this.y, this.width, this.height);
+            }
+        };
+        obstacles.push(obstacle);
+    }
+
+    function checkCollision() {
+        for (let obstacle of obstacles) {
+            if (dino.x < obstacle.x + obstacle.width &&
+                dino.x + dino.width > obstacle.x &&
+                dino.y < obstacle.y + obstacle.height &&
+                dino.y + dino.height > obstacle.y) {
+                gameOver();
+            }
+        }
+    }
+
+    function gameOver() {
+        alert("게임 오버! 점수: " + score);
+        obstacles = [];
+        dino.x = 50;
+        dino.y = canvas.height - 50;
+        score = 0;
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (Math.random() < 0.005) {
+            spawnObstacle();
+        }
+
+        dino.draw();
+
+        if (dino.isJumping) {
+            dino.y -= 5;
+            dino.jumpCount += 5;
+            if (dino.jumpCount >= dino.jumpHeight) {
+                dino.isJumping = false;
+            }
+        } else if (dino.y < canvas.height - 50) {
+            dino.y += 5;
+        }
+
+        for (let obstacle of obstacles) {
+            obstacle.x -= 5;
+            obstacle.draw();
+        }
+
+        checkCollision();
+
+        score++;
+        requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.code === "Space") {
+            dino.jump();
+        }
+    });
+
+    gameLoop();
+</script>
+</body>
+</html>
